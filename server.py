@@ -13,8 +13,6 @@ from models.raw_models import RawOutputModel
 
 app = FastAPI()
 
-app.mount('/' + config.TEXTURES_BASE_URL.strip('/'), StaticFiles(directory='static/client_assets/textures'), name='textures')
-
 
 @app.get('/test-model', response_model=OutputModel, response_model_exclude_none=True)
 async def test_model():
@@ -22,3 +20,7 @@ async def test_model():
     raw_result = RawOutputModel.from_schematic(schematic)
 
     return OutputModel.from_raw_model(raw_result)
+
+
+app.mount('/' + config.TEXTURES_BASE_URL.strip('/'), StaticFiles(directory='static/client_assets/textures'), name='textures')
+app.mount('/', StaticFiles(directory='static/web', html=True), name='web_resources')

@@ -12,6 +12,7 @@ class BlockModel:
     to_coordinate: Optional[tuple[float, float, float]]
     texture: str
     uv: Optional[tuple[int, int, int, int]]
+    face: Optional[str]
     positions: list[tuple[int, int, int]]
 
 
@@ -44,6 +45,7 @@ class OutputRegion:
                         to_coordinate=block.to_coordinate if block.to_coordinate != [16, 16, 16] else None,
                         texture=inverted_textures[block.texture],
                         uv=uv,
+                        face=None,
                         positions=[block.position],
                     )
                 else:
@@ -52,11 +54,24 @@ class OutputRegion:
             elif type(block) == RawBlock:
                 # texture index
                 for td in block.threed_data:
-                    for face in td.faces.values():
+                    for direction, face in td.faces.items():
                         if face.texture not in inverted_textures.keys():
                             inverted_textures[face.texture] = str(uuid4())
 
-                # TODO manage block grouping, UV
+                        simple_dict = {'from': td.from_coordinate, 'to': td.to_coordinate,
+                                       'texture': face.texture, 'uv': face.uv, 'face': direction}
+                        hashed = hash(tuple(sorted(simple_dict.items())))
+                        if hashed not in unique_block_data.keys():
+                            unique_block_data[hashed] = BlockModel(
+                                from_coordinate=td.from_coordinate if td.from_coordinate != [0, 0, 0] else None,
+                                to_coordinate=td.to_coordinate if td.to_coordinate != [16, 16, 16] else None,
+                                texture=inverted_textures[face.texture],
+                                uv=face.uv,
+                                face=direction,
+                                positions=[block.position],
+                            )
+                        else:
+                            unique_block_data[hashed].positions.append(block.position)
 
         # TODO add missing block values
         return OutputRegion({v: k for k, v in inverted_textures.items()}, list(unique_block_data.values()))
