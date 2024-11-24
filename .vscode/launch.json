@@ -1,0 +1,34 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Resource extractor",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/extract_resources.py",
+            "console": "integratedTerminal",
+            "args": ["${input:jarFile}"]
+        },
+        {
+            "name": "Serve local web app (debug/reload)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "uvicorn",
+            "console": "integratedTerminal",
+            "args": ["server:app", "--log-level", "debug", "--reload"]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "jarFile",
+            "type": "command",
+            "command": "extension.commandvariable.file.pickFile",
+            "args": {
+                "description": "The path to the client JAR file"
+            }
+        }
+    ]
+}
