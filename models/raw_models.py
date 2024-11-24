@@ -85,7 +85,7 @@ class RawSimplifiedBlock(RawSimplifiedBlockNoUV):
 
 @dataclass
 class RawTileEntity:
-    blocks: list[RawBlock] | RawBlock | RawSimplifiedBlock | RawSimplifiedBlockNoUV
+    blocks: list[RawBlock | RawBlock | RawSimplifiedBlock | RawSimplifiedBlockNoUV]
 
     @staticmethod
     def from_schematic_region(region: Region) -> 'RawTileEntity':
