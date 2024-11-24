@@ -8,17 +8,16 @@ from fastapi.staticfiles import StaticFiles
 from litemapy import Schematic
 
 import config
-from models.output_models import OutputModel
+from models.raw_models import RawOutputModel
 
 app = FastAPI()
 
 app.mount('/' + config.TEXTURES_BASE_URL.strip('/'), StaticFiles(directory='static/client_assets/textures'), name='textures')
 
-@app.get('/test-model', response_model=OutputModel)
+
+@app.get('/test-model', response_model=RawOutputModel)
 async def test_model():
     schematic = Schematic.load(Path(__file__).parent.joinpath('tests', 'models', 'hole_house_barebones.litematic'))
-    result = OutputModel.from_schematic(schematic)
+    result = RawOutputModel.from_schematic(schematic)
 
     return result
-
-
