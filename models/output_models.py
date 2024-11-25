@@ -73,7 +73,6 @@ class OutputRegion:
                         else:
                             unique_block_data[hashed].positions.append(block.position)
 
-        # TODO add missing block values
         return OutputRegion({v: k for k, v in inverted_textures.items()}, list(unique_block_data.values()))
 
 

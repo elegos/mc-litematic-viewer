@@ -21,23 +21,66 @@ scene.add(light);
 const textureLoader = new THREE.TextureLoader();
 
 
-function createBlock(from, to, texturePath, position) {
+function createBlock(from, to, texturePath, uv, face, position) {
     const geometry = new THREE.BoxGeometry(
         to[0] - from[0],
         to[1] - from[1],
         to[2] - from[2]
     );
-    
+
     const texture = textureLoader.load(texturePath);
     const material = new THREE.MeshBasicMaterial({ map: texture });
-    
+
     const block = new THREE.Mesh(geometry, material);
     block.position.set(
-        position[0] * 16,  // Scala basata su 16x16
+        position[0] * 16,  // Scale is based on 16x16
         position[1] * 16,
         position[2] * 16
     );
-    
+
+    // Check whether there are custom UV coordinates and a specific face.
+    if (face && uv) {
+        // Get the UV geometry attribute
+        const uvAttribute = geometry.getAttribute('uv');
+
+        // Normalize the UV coordinates for a 16x16 texture
+        const faceUvs = [
+            new THREE.Vector2(uv[0] / 16, uv[1] / 16),
+            new THREE.Vector2(uv[2] / 16, uv[1] / 16),
+            new THREE.Vector2(uv[0] / 16, uv[3] / 16),
+            new THREE.Vector2(uv[2] / 16, uv[3] / 16)
+        ];
+
+        // Define the face geometry indexes
+        const faceIndexMap = {
+            'east': [8, 9],    // Est
+            'west': [4, 5],    // West
+            'up': [0, 1],      // Up
+            'down': [6, 7],    // Down
+            'north': [10, 11], // North
+            'south': [2, 3]    // South
+        };
+
+        // Obtain the specified face indexes
+        const faceIndices = faceIndexMap[face];
+
+        if (faceIndices) {
+            // Apply the personalized UV coordinates to the specified faces
+            for (let i = 0; i < faceIndices.length; i++) {
+                const idx = faceIndices[i] * 2;
+
+                // Set the UV coordinate to the face's vertexes
+                uvAttribute.setXY(idx, faceUvs[0].x, faceUvs[0].y);
+                uvAttribute.setXY(idx + 1, faceUvs[1].x, faceUvs[1].y);
+                uvAttribute.setXY(idx + 2, faceUvs[2].x, faceUvs[2].y);
+                uvAttribute.setXY(idx + 3, faceUvs[3].x, faceUvs[3].y);
+            }
+        }
+
+        // Ensure that Three.js updates the UV mappings
+        uvAttribute.needsUpdate = true;
+    }
+
     return block;
 }
 
@@ -56,9 +99,11 @@ fetch('/test-model')
                 const to = block.to_coordinate;
                 const textureUUID = block.texture;
                 const texturePath = textures[textureUUID];
+                const uv = block.uv ?? null;
+                const face = block.face ?? null;
                 
                 block.positions.forEach(position => {
-                    const blockMesh = createBlock(from, to, texturePath, position);
+                    const blockMesh = createBlock(from, to, texturePath, uv, face, position);
                     scene.add(blockMesh);
                 });
             });
