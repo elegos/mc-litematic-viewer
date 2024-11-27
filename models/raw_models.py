@@ -3,6 +3,7 @@ from functools import reduce
 from typing import Literal, Optional, Union
 
 from litemapy import Region, Schematic
+from litemapy.storage import DiscriminatingDictionary
 
 from minecraft import get_model_data, get_texture_urls, manage_textures_for_elements
 
@@ -37,7 +38,12 @@ class RawBlock3DData:
 @dataclass
 class RawBlock:
     position: tuple[int, int, int]
+    connected_sides: list[Literal['up', 'down', 'north', 'south', 'west', 'east']]
     threed_data: list[RawBlock3DData]
+
+    @staticmethod
+    def get_connected_sides(props: DiscriminatingDictionary):
+        return [prop for prop in ['up', 'down', 'north', 'south', 'west', 'east'] if props.get(prop, 'fasle') == 'true']
 
 
 @dataclass
@@ -46,6 +52,7 @@ class RawSimplifiedBlockNoUV:
     from_coordinate: tuple[float, float, float]
     to_coordinate: tuple[float, float, float]
     texture: str
+    connected_sides: list[Literal['up', 'down', 'north', 'south', 'west', 'east']]
 
 
 @dataclass
@@ -72,6 +79,7 @@ class RawSimplifiedBlock(RawSimplifiedBlockNoUV):
                 block.threed_data[0].from_coordinate,
                 block.threed_data[0].to_coordinate,
                 first_face.texture,
+                connected_sides=block.connected_sides,
             )
 
         return RawSimplifiedBlock(
@@ -79,6 +87,7 @@ class RawSimplifiedBlock(RawSimplifiedBlockNoUV):
             block.threed_data[0].from_coordinate,
             block.threed_data[0].to_coordinate,
             first_face.texture,
+            block.connected_sides,
             first_face.uv,
         )
 
@@ -99,6 +108,7 @@ class RawTileEntity:
                         continue
 
                     raw_data_model = get_model_data(block.id, block._BlockState__properties)
+                    connected_sides = RawBlock.get_connected_sides(block._BlockState__properties)
 
                     if 'elements' not in raw_data_model:
                         # search within the tile entities
@@ -129,14 +139,15 @@ class RawTileEntity:
 
                     block_output = RawBlock(
                         (x, y, z),
+                        connected_sides,
                         [RawBlock3DData(
                             from_coordinate=tuple(datum['from']),
                             to_coordinate=tuple(datum['to']),
                             faces={
                                 key: RawFace3DData.from_dict(value)
                                 for key, value in datum['faces'].items()
-                            },
-                        ).with_simplified_faces() for datum in raw_data_model['elements']]
+                            }
+                        ).with_simplified_faces() for datum in raw_data_model['elements']],
                     )
 
                     block_output = RawSimplifiedBlock.from_block(block_output)

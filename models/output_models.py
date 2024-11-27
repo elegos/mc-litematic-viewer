@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Literal, Optional
 from uuid import uuid4
 
 from pydantic.dataclasses import dataclass
@@ -14,6 +14,7 @@ class BlockModel:
     uv: Optional[tuple[int, int, int, int]]
     face: Optional[str]
     positions: list[tuple[int, int, int]]
+    connected_sides: Optional[list[Literal['up', 'down', 'north', 'south', 'west', 'east']]]
 
 
 @dataclass
@@ -47,6 +48,7 @@ class OutputRegion:
                         uv=uv,
                         face=None,
                         positions=[block.position],
+                        connected_sides=block.connected_sides or None,
                     )
                 else:
                     unique_block_data[hashed].positions.append(block.position)
@@ -69,6 +71,7 @@ class OutputRegion:
                                 uv=face.uv,
                                 face=direction,
                                 positions=[block.position],
+                                connected_sides=block.connected_sides or None,
                             )
                         else:
                             unique_block_data[hashed].positions.append(block.position)

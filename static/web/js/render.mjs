@@ -21,7 +21,7 @@ scene.add(light);
 const textureLoader = new THREE.TextureLoader();
 
 
-function createBlock(from, to, texturePath, uv, face, position) {
+function createBlock(from, to, texturePath, uv, face, position, connectedSides) {
     const geometry = new THREE.BoxGeometry(
         to[0] - from[0],
         to[1] - from[1],
@@ -81,6 +81,38 @@ function createBlock(from, to, texturePath, uv, face, position) {
         uvAttribute.needsUpdate = true;
     }
 
+    // Support for connected sides (for example, glass panes)
+    if (connectedSides && connectedSides.length > 0) {
+        connectedSides.forEach(side => {
+            let connectionGeometry;
+            switch (side) {
+                case 'north':
+                    connectionGeometry = new THREE.BoxGeometry(0.1, 16, 16);
+                    break;
+                case 'south':
+                    connectionGeometry = new THREE.BoxGeometry(0.1, 16, 16);
+                    break;
+                case 'east':
+                    connectionGeometry = new THREE.BoxGeometry(16, 16, 0.1);
+                    break;
+                case 'west':
+                    connectionGeometry = new THREE.BoxGeometry(16, 16, 0.1);
+                    break;
+                case 'up':
+                    connectionGeometry = new THREE.BoxGeometry(16, 0.1, 16);
+                    break;
+                case 'down':
+                    connectionGeometry = new THREE.BoxGeometry(16, 0.1, 16);
+                    break;
+            }
+            if (connectionGeometry) {
+                const connectionMesh = new THREE.Mesh(connectionGeometry, material);
+                connectionMesh.position.copy(block.position);
+                scene.add(connectionMesh);
+            }
+        });
+    }
+
     return block;
 }
 
@@ -101,9 +133,10 @@ fetch('/test-model')
                 const texturePath = textures[textureUUID];
                 const uv = block.uv ?? null;
                 const face = block.face ?? null;
+                const connectedSides = block.connected_sides ?? null;
                 
                 block.positions.forEach(position => {
-                    const blockMesh = createBlock(from, to, texturePath, uv, face, position);
+                    const blockMesh = createBlock(from, to, texturePath, uv, face, position, connectedSides);
                     scene.add(blockMesh);
                 });
             });

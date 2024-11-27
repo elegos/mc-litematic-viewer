@@ -23,7 +23,7 @@ At the moment, the tool is able to render a barebone representation of a demo sc
 - [ ] Add support for Tile Entities (see ~[models/raw_models.py#L110](models/raw_models.py#L110)), they're currently rendered as single, yellow wool blocks
 - [ ] Add support for block state (unsure if the current solution implements it, still navigating at sight)
 - [ ] Add support for particles
-- [ ] Add support for proper glass panes visualization (currently they appear as ugly sticks!)
+- [x] Add support for proper glass panes visualization ~~(currently they appear as ugly sticks!)~~
 - [ ] Add support for better illumination
 
 Any help is appreciated!
