@@ -24,7 +24,8 @@ At the moment, the tool is able to render a barebone representation of a demo sc
 - [ ] Add support for block state (unsure if the current solution implements it, still navigating at sight)
 - [ ] Add support for particles
 - [x] Add support for proper glass panes visualization ~~(currently they appear as ugly sticks!)~~
-- [ ] Add support for geometry transformations (rotation) - for example to manage torches on walls
+- [x] Add support for geometry transformations (rotation) - for example to manage torches on walls
+- [x] Add support for geometry facing
 - [ ] Add support for better illumination
 
 Any help is appreciated!
