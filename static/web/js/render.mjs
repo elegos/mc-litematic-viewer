@@ -101,19 +101,6 @@ function createBlock(from, to, texturePath, uv, face, position, connectedSides, 
         });
     }
 
-    // Facing management
-    if (face) {
-        const mult = {
-            'north': 0,
-            'south': 1,
-            'east': 1/2,
-            'west': -1/2,
-        }
-        const orientationAngle = Math.PI * (mult[face] || 0);
-
-        block.rotation.y = orientationAngle;
-    }
-
     // Transformations support
     if (transformations && transformations.rotation) {
         const origin = new THREE.Vector3(
@@ -142,6 +129,19 @@ function createBlock(from, to, texturePath, uv, face, position, connectedSides, 
 
         // Return the block to its original position
         block.position.add(origin);
+    }
+
+    // Facing management
+    if (face) {
+        const mult = {
+            'north': -1/2,
+            'south': 1/2,
+            'east': 0,
+            'west': 1,
+        }
+        const orientationAngle = Math.PI * (mult[face] || 0);
+
+        block.rotation.y = orientationAngle;
     }
 
     return block;

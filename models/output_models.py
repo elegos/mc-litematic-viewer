@@ -40,7 +40,7 @@ class OutputRegion:
                 # block grouping
                 uv = block.uv if type(block) == RawSimplifiedBlock else None
                 simple_dict = {'from': block.from_coordinate, 'to': block.to_coordinate,
-                               'texture': block.texture, 'uv': uv, 'direction': block.direction}
+                               'texture': block.texture, 'uv': uv, 'facing': block.facing}
                 hashed = hash(tuple(sorted(simple_dict.items())))
                 if hashed not in unique_block_data.keys():
                     unique_block_data[hashed] = BlockModel(
@@ -48,7 +48,7 @@ class OutputRegion:
                         to_coordinate=block.to_coordinate if block.to_coordinate != [16, 16, 16] else None,
                         texture=inverted_textures[block.texture],
                         uv=uv,
-                        face=block.direction,
+                        face=block.facing,
                         positions=[block.position],
                         connected_sides=block.connected_sides or None,
                         transformations=block.transformations,
@@ -59,20 +59,24 @@ class OutputRegion:
             elif type(block) == RawBlock:
                 # texture index
                 for td in block.threed_data:
-                    for direction, face in td.faces.items():
+                    faces = {block.facing: td.faces[block.facing]} if block.facing and block.facing in td.faces.keys() else td.faces
+                    for direction, face in faces.items():
                         if face.texture not in inverted_textures.keys():
                             inverted_textures[face.texture] = str(uuid4())
 
                         simple_dict = {'from': td.from_coordinate, 'to': td.to_coordinate,
-                                       'texture': face.texture, 'uv': face.uv, 'face': direction, 'transformations': td.transformations, 'direction': direction}
+                                       'texture': face.texture, 'uv': face.uv, 'face': direction, 'transformations': td.transformations}
                         hashed = hash(tuple(sorted(simple_dict.items())))
+
+                        # TODO: fix duplicated block positions for different facing (see duplicated torches facing all directions)
+
                         if hashed not in unique_block_data.keys():
                             unique_block_data[hashed] = BlockModel(
                                 from_coordinate=td.from_coordinate if td.from_coordinate != [0, 0, 0] else None,
                                 to_coordinate=td.to_coordinate if td.to_coordinate != [16, 16, 16] else None,
                                 texture=inverted_textures[face.texture],
                                 uv=face.uv,
-                                face=direction,
+                                face=block.facing,
                                 positions=[block.position],
                                 connected_sides=block.connected_sides or None,
                                 transformations=td.transformations,

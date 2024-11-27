@@ -67,6 +67,7 @@ class RawBlock3DData:
 @dataclass
 class RawBlock:
     position: tuple[int, int, int]
+    facing: Optional[Literal['up', 'down', 'north', 'south', 'west', 'east']]
     connected_sides: list[Literal['up', 'down', 'north', 'south', 'west', 'east']]
     threed_data: list[RawBlock3DData]
 
@@ -80,7 +81,7 @@ class RawSimplifiedBlockNoUV:
     position: tuple[int, int, int]
     from_coordinate: tuple[float, float, float]
     to_coordinate: tuple[float, float, float]
-    direction: Literal['up', 'down', 'north', 'south', 'west', 'east', '']
+    facing: Literal['up', 'down', 'north', 'south', 'west', 'east', '']
     texture: str
     connected_sides: list[Literal['up', 'down', 'north', 'south', 'west', 'east']]
     transformations: Optional[RawBlock3DDataTransformations]
@@ -110,7 +111,7 @@ class RawSimplifiedBlock(RawSimplifiedBlockNoUV):
                 block.position,
                 block.threed_data[0].from_coordinate,
                 block.threed_data[0].to_coordinate,
-                first_face_direction or None,
+                block.facing,
                 first_face.texture,
                 connected_sides=block.connected_sides,
                 transformations=block.threed_data[0].transformations,
@@ -120,7 +121,7 @@ class RawSimplifiedBlock(RawSimplifiedBlockNoUV):
             block.position,
             block.threed_data[0].from_coordinate,
             block.threed_data[0].to_coordinate,
-            first_face_direction or None,
+            block.facing,
             first_face.texture,
             block.connected_sides,
             block.threed_data[0].transformations,
@@ -175,6 +176,7 @@ class RawTileEntity:
 
                     block_output = RawBlock(
                         (x, y, z),
+                        block._BlockState__properties.get('facing', None),
                         connected_sides,
                         [RawBlock3DData(
                             from_coordinate=tuple(datum['from']),
