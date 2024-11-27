@@ -20,19 +20,42 @@ class RawFace3DData:
 
 
 @dataclass
+class RawBlockRotation:
+    origin: tuple[float, float, float]
+    axis: Literal['x', 'y', 'z']
+    angle: float
+
+
+@dataclass
+class RawBlock3DDataTransformations:
+    rotation: Optional[RawBlockRotation]
+
+
+@dataclass
 class RawBlock3DData:
     from_coordinate: tuple[float, float, float]
     to_coordinate: tuple[float, float, float]
     faces: dict[Literal['up', 'down', 'north', 'south', 'west', 'east', ''], RawFace3DData]
+    transformations: Optional[RawBlock3DDataTransformations]
 
     def with_simplified_faces(self) -> 'RawBlock3DData':
         face_values = [{k: v for k, v in face.__dict__.items() if k != 'cullface'} for k, face in self.faces.items()]
 
         # Simplified faces (all faces are equal, show only one)
         if reduce(lambda a, b: a if a == b else False, face_values):
-            return RawBlock3DData(self.from_coordinate, self.to_coordinate, {'': self.faces[next(k for k in self.faces.keys())]})
+            return RawBlock3DData(self.from_coordinate, self.to_coordinate, {'': self.faces[next(k for k in self.faces.keys())]}, self.transformations)
 
         return self
+
+    @staticmethod
+    def get_transformations_from_model_data(raw_element_data: dict) -> Optional[RawBlock3DDataTransformations]:
+        rotation: dict = raw_element_data.get('rotation', None)
+        if rotation:
+            rotation = RawBlockRotation(origin=tuple(rotation['origin']), axis=rotation['axis'], angle=rotation['angle'])
+
+        return RawBlock3DDataTransformations(
+            rotation=rotation,
+        )
 
 
 @dataclass
@@ -53,6 +76,7 @@ class RawSimplifiedBlockNoUV:
     to_coordinate: tuple[float, float, float]
     texture: str
     connected_sides: list[Literal['up', 'down', 'north', 'south', 'west', 'east']]
+    transformations: Optional[RawBlock3DDataTransformations]
 
 
 @dataclass
@@ -80,6 +104,7 @@ class RawSimplifiedBlock(RawSimplifiedBlockNoUV):
                 block.threed_data[0].to_coordinate,
                 first_face.texture,
                 connected_sides=block.connected_sides,
+                transformations=block.threed_data[0].transformations,
             )
 
         return RawSimplifiedBlock(
@@ -88,6 +113,7 @@ class RawSimplifiedBlock(RawSimplifiedBlockNoUV):
             block.threed_data[0].to_coordinate,
             first_face.texture,
             block.connected_sides,
+            block.threed_data[0].transformations,
             first_face.uv,
         )
 
@@ -146,7 +172,8 @@ class RawTileEntity:
                             faces={
                                 key: RawFace3DData.from_dict(value)
                                 for key, value in datum['faces'].items()
-                            }
+                            },
+                            transformations=RawBlock3DData.get_transformations_from_model_data(datum),
                         ).with_simplified_faces() for datum in raw_data_model['elements']],
                     )
 

@@ -21,7 +21,7 @@ scene.add(light);
 const textureLoader = new THREE.TextureLoader();
 
 
-function createBlock(from, to, texturePath, uv, face, position, connectedSides) {
+function createBlock(from, to, texturePath, uv, face, position, connectedSides, transformations) {
     const geometry = new THREE.BoxGeometry(
         to[0] - from[0],
         to[1] - from[1],
@@ -29,7 +29,7 @@ function createBlock(from, to, texturePath, uv, face, position, connectedSides) 
     );
 
     const texture = textureLoader.load(texturePath);
-    const material = new THREE.MeshBasicMaterial({ map: texture });
+    const material = new THREE.MeshBasicMaterial({ map: texture }); // TODO manage transparency (need more info from model) -> transparency: bool, opacity: float
 
     const block = new THREE.Mesh(geometry, material);
     block.position.set(
@@ -113,6 +113,36 @@ function createBlock(from, to, texturePath, uv, face, position, connectedSides) 
         });
     }
 
+    // Transformations support
+    if (transformations && transformations.rotation) {
+        const origin = new THREE.Vector3(
+            transformations.rotation.origin[0] * 16,
+            transformations.rotation.origin[1] * 16,
+            transformations.rotation.origin[2] * 16
+        );
+
+        const angleInRadians = THREE.MathUtils.degToRad(transformations.rotation.angle);
+
+        // Move the block to the defined origin
+        block.position.sub(origin);
+
+        // Rotate the block around the specified axis
+        switch (transformations.rotation.axis) {
+            case 'x':
+                block.rotateOnAxis(new THREE.Vector3(1, 0, 0), angleInRadians);
+                break;
+            case 'y':
+                block.rotateOnAxis(new THREE.Vector3(0, 1, 0), angleInRadians);
+                break;
+            case 'z':
+                block.rotateOnAxis(new THREE.Vector3(0, 0, 1), angleInRadians);
+                break;
+        }
+
+        // Return the block to its original position
+        block.position.add(origin);
+    }
+
     return block;
 }
 
@@ -134,9 +164,10 @@ fetch('/test-model')
                 const uv = block.uv ?? null;
                 const face = block.face ?? null;
                 const connectedSides = block.connected_sides ?? null;
+                const transformations = block.transformations ?? null;
                 
                 block.positions.forEach(position => {
-                    const blockMesh = createBlock(from, to, texturePath, uv, face, position, connectedSides);
+                    const blockMesh = createBlock(from, to, texturePath, uv, face, position, connectedSides, transformations);
                     scene.add(blockMesh);
                 });
             });

@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from pydantic.dataclasses import dataclass
 
-from models.raw_models import RawBlock, RawOutputModel, RawSimplifiedBlock, RawSimplifiedBlockNoUV, RawTileEntity
+from models.raw_models import RawBlock, RawBlock3DDataTransformations, RawOutputModel, RawSimplifiedBlock, RawSimplifiedBlockNoUV, RawTileEntity
 
 
 @dataclass
@@ -15,6 +15,7 @@ class BlockModel:
     face: Optional[str]
     positions: list[tuple[int, int, int]]
     connected_sides: Optional[list[Literal['up', 'down', 'north', 'south', 'west', 'east']]]
+    transformations: Optional[RawBlock3DDataTransformations]
 
 
 @dataclass
@@ -49,6 +50,7 @@ class OutputRegion:
                         face=None,
                         positions=[block.position],
                         connected_sides=block.connected_sides or None,
+                        transformations=block.transformations,
                     )
                 else:
                     unique_block_data[hashed].positions.append(block.position)
@@ -72,6 +74,7 @@ class OutputRegion:
                                 face=direction,
                                 positions=[block.position],
                                 connected_sides=block.connected_sides or None,
+                                transformations=td.transformations,
                             )
                         else:
                             unique_block_data[hashed].positions.append(block.position)
