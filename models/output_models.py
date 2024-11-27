@@ -12,7 +12,7 @@ class BlockModel:
     to_coordinate: Optional[tuple[float, float, float]]
     texture: str
     uv: Optional[tuple[int, int, int, int]]
-    face: Optional[str]
+    face: Optional[Literal['up', 'down', 'north', 'south', 'west', 'east']]
     positions: list[tuple[int, int, int]]
     connected_sides: Optional[list[Literal['up', 'down', 'north', 'south', 'west', 'east']]]
     transformations: Optional[RawBlock3DDataTransformations]
@@ -39,7 +39,8 @@ class OutputRegion:
 
                 # block grouping
                 uv = block.uv if type(block) == RawSimplifiedBlock else None
-                simple_dict = {'from': block.from_coordinate, 'to': block.to_coordinate, 'texture': block.texture, 'uv': uv}
+                simple_dict = {'from': block.from_coordinate, 'to': block.to_coordinate,
+                               'texture': block.texture, 'uv': uv, 'direction': block.direction}
                 hashed = hash(tuple(sorted(simple_dict.items())))
                 if hashed not in unique_block_data.keys():
                     unique_block_data[hashed] = BlockModel(
@@ -47,7 +48,7 @@ class OutputRegion:
                         to_coordinate=block.to_coordinate if block.to_coordinate != [16, 16, 16] else None,
                         texture=inverted_textures[block.texture],
                         uv=uv,
-                        face=None,
+                        face=block.direction,
                         positions=[block.position],
                         connected_sides=block.connected_sides or None,
                         transformations=block.transformations,
@@ -63,7 +64,7 @@ class OutputRegion:
                             inverted_textures[face.texture] = str(uuid4())
 
                         simple_dict = {'from': td.from_coordinate, 'to': td.to_coordinate,
-                                       'texture': face.texture, 'uv': face.uv, 'face': direction}
+                                       'texture': face.texture, 'uv': face.uv, 'face': direction, 'transformations': td.transformations, 'direction': direction}
                         hashed = hash(tuple(sorted(simple_dict.items())))
                         if hashed not in unique_block_data.keys():
                             unique_block_data[hashed] = BlockModel(

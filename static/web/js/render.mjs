@@ -84,33 +84,34 @@ function createBlock(from, to, texturePath, uv, face, position, connectedSides, 
     // Support for connected sides (for example, glass panes)
     if (connectedSides && connectedSides.length > 0) {
         connectedSides.forEach(side => {
-            let connectionGeometry;
-            switch (side) {
-                case 'north':
-                    connectionGeometry = new THREE.BoxGeometry(0.1, 16, 16);
-                    break;
-                case 'south':
-                    connectionGeometry = new THREE.BoxGeometry(0.1, 16, 16);
-                    break;
-                case 'east':
-                    connectionGeometry = new THREE.BoxGeometry(16, 16, 0.1);
-                    break;
-                case 'west':
-                    connectionGeometry = new THREE.BoxGeometry(16, 16, 0.1);
-                    break;
-                case 'up':
-                    connectionGeometry = new THREE.BoxGeometry(16, 0.1, 16);
-                    break;
-                case 'down':
-                    connectionGeometry = new THREE.BoxGeometry(16, 0.1, 16);
-                    break;
+            const geometries = {
+                'north': [0.1, 16, 16],
+                'south': [0.1, 16, 16],
+                'east': [16, 16, 0.1],
+                'west': [16, 16, 0.1],
+                'up': [16, 0.1, 16],
+                'down': [16, 0.1, 16],
             }
+            const connectionGeometry = new THREE.BoxGeometry(...geometries[side]) || null;
             if (connectionGeometry) {
                 const connectionMesh = new THREE.Mesh(connectionGeometry, material);
                 connectionMesh.position.copy(block.position);
                 scene.add(connectionMesh);
             }
         });
+    }
+
+    // Facing management
+    if (face) {
+        const mult = {
+            'north': 0,
+            'south': 1,
+            'east': 1/2,
+            'west': -1/2,
+        }
+        const orientationAngle = Math.PI * (mult[face] || 0);
+
+        block.rotation.y = orientationAngle;
     }
 
     // Transformations support

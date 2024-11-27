@@ -25,10 +25,16 @@ class RawBlockRotation:
     axis: Literal['x', 'y', 'z']
     angle: float
 
+    def __hash__(self) -> int:
+        return hash((self.origin, self.axis, self.angle))
+
 
 @dataclass
 class RawBlock3DDataTransformations:
     rotation: Optional[RawBlockRotation]
+
+    def __hash__(self) -> int:
+        return hash((self.rotation,))
 
 
 @dataclass
@@ -74,6 +80,7 @@ class RawSimplifiedBlockNoUV:
     position: tuple[int, int, int]
     from_coordinate: tuple[float, float, float]
     to_coordinate: tuple[float, float, float]
+    direction: Literal['up', 'down', 'north', 'south', 'west', 'east', '']
     texture: str
     connected_sides: list[Literal['up', 'down', 'north', 'south', 'west', 'east']]
     transformations: Optional[RawBlock3DDataTransformations]
@@ -96,12 +103,14 @@ class RawSimplifiedBlock(RawSimplifiedBlockNoUV):
         if not all_faces_are_equal:
             return block
 
-        first_face = block.threed_data[0].faces[next((k for k in block.threed_data[0].faces.keys()))]
+        first_face_direction = next((k for k in block.threed_data[0].faces.keys()))
+        first_face = block.threed_data[0].faces[first_face_direction]
         if first_face.uv == None:
             return RawSimplifiedBlockNoUV(
                 block.position,
                 block.threed_data[0].from_coordinate,
                 block.threed_data[0].to_coordinate,
+                first_face_direction or None,
                 first_face.texture,
                 connected_sides=block.connected_sides,
                 transformations=block.threed_data[0].transformations,
@@ -111,6 +120,7 @@ class RawSimplifiedBlock(RawSimplifiedBlockNoUV):
             block.position,
             block.threed_data[0].from_coordinate,
             block.threed_data[0].to_coordinate,
+            first_face_direction or None,
             first_face.texture,
             block.connected_sides,
             block.threed_data[0].transformations,
@@ -182,7 +192,6 @@ class RawTileEntity:
                     blocks.append(block_output)
 
         return RawTileEntity(
-            # palette=[PaletteOutput.from_block_state(bs) for bs in region.palette],
             blocks=blocks,
         )
 
